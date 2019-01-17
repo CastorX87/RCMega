@@ -1,45 +1,71 @@
 <!DOCTYPE HTML>
-
 <html>
    <head>
       
       <script type = "text/javascript">
-		 var ws;
+	  function handleStart(evt)
+	  {
+		
+		}
+		function handleMove(evt)
+		{
+			
+		}
+function startup() {
+  var el = document.getElementsByTagName("canvas")[0];
+  el.addEventListener("touchstart", handleStart, false);
+  //el.addEventListener("touchend", handleEnd, false);
+  //el.addEventListener("touchcancel", handleCancel, false);
+  el.addEventListener("touchmove", handleMove, false);
+  console.log("initialized.");
+}
+		function draw()
+		{
+			alert("aaa");
+			var canvas = document.getElementById('mycanvas');
+ 
+			if(canvas.getContext)
+			{
+				var ctx = canvas.getContext("2d");
+				ctx.fillRect (event.touches[0].pageX, event.touches[0].pageY, 5, 5);
+			}
+		}
+	  
+		 var ws = null;
 		 
 		 function SendWSMessage(msgToSend)
 		 {
 			ws.send(msgToSend);
 		 }
 		 
-         function WebSocketTest() {
-            
-            if ("WebSocket" in window) {
-               alert("WebSocket is supported by your Browser!");
-               
-               // Let us open a web socket
-               ws = new WebSocket("ws://192.168.178.27:81");
+         function SendCommand(cmd, param)
+		 {
+            var toSend = cmd.concat(param);
+            if ("WebSocket" in window)
+			{
+				// Let us open a web socket
+			    if(ws == null)
+			    {
+					ws = new WebSocket("ws://192.168.178.27:81");
 				
-               ws.onopen = function() {
-                  
-                  // Web Socket is connected, send data using send()
-                  //ws.send("Message to send");
-				  SendWSMessage("HELLO WORLD");
-                  alert("Message is sent...");
-               };
-				
-               ws.onmessage = function (evt) { 
-                  var received_msg = evt.data;
-                  alert("Message is received...");
-               };
-				
-               ws.onclose = function() { 
-                  
-                  // websocket is closed.
-                  alert("Connection is closed..."); 
-               };
-            } else {
-              
-               // The browser doesn't support WebSocket
+					ws.onopen = function()
+					{
+					};
+					
+					ws.onmessage = function (evt)
+					{
+						var received_msg = evt.data;
+					};
+					
+					ws.onclose = function()
+					{ 
+						alert("Connection is closed..."); 
+					};
+				}
+				ws.send(toSend);
+            }
+			else
+			{
                alert("WebSocket NOT supported by your Browser!");
             }
          }
@@ -48,9 +74,16 @@
    </head>
    
    <body>
-      <div id = "sse">
-         <a href = "javascript:WebSocketTest()">Run WebSocket</a>
-      </div>
-      
+		<div id = "sse">
+			<a href = "javascript:SendCommand('F', '50')">--------------</a>
+		</div>
+<canvas id="canvas" style="border:solid black 1px;">
+  Your browser does not support canvas element.
+</canvas>
+<br>
+<button onclick="startup()">Initialize</button>
+<br>
+Log: <pre id="log" style="border: 1px solid #ccc;"></pre>
+  </body>
    </body>
 </html>
