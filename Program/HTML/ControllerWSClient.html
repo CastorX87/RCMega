@@ -3,13 +3,29 @@
    <head>
       
       <script type = "text/javascript">
-	  function handleStart(evt)
-	  {
-		
+		function handleStart(evt)
+		{
+			var touches = evt.changedTouches;
+			var el = document.getElementsByTagName("canvas")[0];
+			
+			var acc = -(touches[0].pageY - el.height / 2.0) / el.height * 2;
+			var steer = (touches[0].pageX - el.width / 2.0) / el.width * 2;
+			
+			SendCommand('A', acc.toFixed(2));
+			SendCommand('S', steer.toFixed(2));
 		}
 		function handleMove(evt)
 		{
+			var touches = evt.changedTouches;
+			var el = document.getElementsByTagName("canvas")[0];
 			
+			var acc = -(touches[0].pageY - el.height / 2.0) / el.height * 2;
+			var steer = (touches[0].pageX - el.width / 2.0) / el.width * 2;
+			
+			SendCommand('A', acc.toFixed(2));
+			SendCommand('S', steer.toFixed(2));
+			
+			evt.preventDefault();
 		}
 function startup() {
   var el = document.getElementsByTagName("canvas")[0];
@@ -17,6 +33,15 @@ function startup() {
   //el.addEventListener("touchend", handleEnd, false);
   //el.addEventListener("touchcancel", handleCancel, false);
   el.addEventListener("touchmove", handleMove, false);
+  // Get the canvas element form the page
+
+ 
+/* Rresize the canvas to occupy the full page, 
+   by getting the widow width and height and setting it to canvas*/
+ 
+el.width  = window.innerWidth;
+el.height = window.innerHeight - 100;
+ 
   console.log("initialized.");
 }
 		function draw()
@@ -41,12 +66,13 @@ function startup() {
          function SendCommand(cmd, param)
 		 {
             var toSend = cmd.concat(param);
+			console.log(toSend);
             if ("WebSocket" in window)
 			{
 				// Let us open a web socket
 			    if(ws == null)
 			    {
-					ws = new WebSocket("ws://192.168.178.27:81");
+					ws = new WebSocket("ws://192.168.4.1:81");
 				
 					ws.onopen = function()
 					{
