@@ -3,47 +3,42 @@
    <head>
       
       <script type = "text/javascript">
-		function handleStart(evt)
+		function HANDLE_MOV(evt)
 		{
-			var touches = evt.changedTouches;
+	  		var touches = evt.changedTouches;
 			var el = document.getElementsByTagName("canvas")[0];
+			var acc = -(touches[0].pageY - el.height / 2.0) / el.height * 2.3;			
 			
-			var acc = -(touches[0].pageY - el.height / 2.0) / el.height * 2;
+			if(acc > 1) acc = 1;
+			if(acc < -1) acc = -1;
+			
+			if(touches[0].pageY > el.height)
+				acc = -1;
+			
 			var steer = (touches[0].pageX - el.width / 2.0) / el.width * 2;
-			
-			SendCommand('A', acc.toFixed(2));
-			SendCommand('S', steer.toFixed(2));
-		}
-		function handleMove(evt)
-		{
-			var touches = evt.changedTouches;
-			var el = document.getElementsByTagName("canvas")[0];
-			
-			var acc = -(touches[0].pageY - el.height / 2.0) / el.height * 2;
-			var steer = (touches[0].pageX - el.width / 2.0) / el.width * 2;
-			
-			SendCommand('A', acc.toFixed(2));
-			SendCommand('S', steer.toFixed(2));
-			
+			var accInt = parseInt((acc / 2.0) * 128 + 64);
+			var steerInt = parseInt((steer / 2.0) * 128 + 64);
+			SendCommandBin(accInt, steerInt);
 			evt.preventDefault();
 		}
-function startup() {
-  var el = document.getElementsByTagName("canvas")[0];
-  el.addEventListener("touchstart", handleStart, false);
-  //el.addEventListener("touchend", handleEnd, false);
-  //el.addEventListener("touchcancel", handleCancel, false);
-  el.addEventListener("touchmove", handleMove, false);
-  // Get the canvas element form the page
-
- 
-/* Rresize the canvas to occupy the full page, 
-   by getting the widow width and height and setting it to canvas*/
- 
-el.width  = window.innerWidth;
-el.height = window.innerHeight - 100;
- 
-  console.log("initialized.");
-}
+		
+		function handleStart(evt)
+		{
+			HANDLE_MOV(evt);
+		}
+		
+		function handleMove(evt)
+		{
+			HANDLE_MOV(evt);
+		}
+		function startup()
+		{
+			var el = document.getElementsByTagName("canvas")[0];
+			el.addEventListener("touchstart", handleStart, false);
+			el.addEventListener("touchmove", handleMove, false);
+			el.width  = window.innerWidth;
+			el.height = window.innerHeight - 100;
+		}
 		function draw()
 		{
 			alert("aaa");
@@ -63,16 +58,39 @@ el.height = window.innerHeight - 100;
 			ws.send(msgToSend);
 		 }
 		 
+         function SendCommandBin(accIntVal, steerIntVal)
+		 {
+            if ("WebSocket" in window)
+			{
+			    if(ws == null)
+			    {
+					ws = new WebSocket("ws://192.168.1.138:81");
+					ws.onopen = function() { };
+					ws.onmessage = function (evt) { var received_msg = evt.data; };
+					ws.onclose = function() { ws = null; };
+				}
+				
+				var myArray = new ArrayBuffer(2);
+				var longUInt8View = new Uint8Array(myArray);
+				longUInt8View[0] = accIntVal;
+				longUInt8View[1] = steerIntVal;
+				ws.send(myArray);
+            }
+			else
+			{
+               alert("WebSocket NOT supported by your Browser!");
+            }
+         }
+		 
          function SendCommand(cmd, param)
 		 {
             var toSend = cmd.concat(param);
-			console.log(toSend);
             if ("WebSocket" in window)
 			{
 				// Let us open a web socket
 			    if(ws == null)
 			    {
-					ws = new WebSocket("ws://192.168.4.1:81");
+					ws = new WebSocket("ws://192.168.1.138:81");
 				
 					ws.onopen = function()
 					{
@@ -85,7 +103,8 @@ el.height = window.innerHeight - 100;
 					
 					ws.onclose = function()
 					{ 
-						alert("Connection is closed..."); 
+						ws = null;
+						//alert("Connection is closed..."); 
 					};
 				}
 				ws.send(toSend);
@@ -100,14 +119,11 @@ el.height = window.innerHeight - 100;
    </head>
    
    <body>
-		<div id = "sse">
-			<a href = "javascript:SendCommand('F', '50')">--------------</a>
-		</div>
-<canvas id="canvas" style="border:solid black 1px;">
-  Your browser does not support canvas element.
-</canvas>
-<br>
-<button onclick="startup()">Initialize</button>
+	<canvas id="canvas" style="border:solid black 1px;">
+		Your browser does not support canvas element.
+	</canvas>
+	<br>
+	<button onclick="startup()">Initialize</button>
 <br>
 Log: <pre id="log" style="border: 1px solid #ccc;"></pre>
   </body>
